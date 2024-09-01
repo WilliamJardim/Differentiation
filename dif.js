@@ -2393,6 +2393,7 @@ function derivar_expressao_por_etapas(expressao, emRelacao='x'){
 
         //cria uma tabela "ID_TERMO * ID_TERMO" : dados_derivacao_incluindo_constante
         //TODO: CORRIGIR, NO CASO DEVERIA SER CONSTANTES_INICIO * (DERIVADA_FORA * DERIVADA_DENTRO) * CONSTANTES_FINAL
+        //Cria uma relação da derivacao e a constantes que ela tem, uma string contendo isso acima
         let tabela_termos_substituidos_com_constantes = {};
         let tabela_derivacoes_com_constantes_recolocadas = {};
 
@@ -2455,8 +2456,9 @@ function derivar_expressao_por_etapas(expressao, emRelacao='x'){
                             let operacao_mat_ultima_constante_inicio_termo = ultima_comeco_termo['tem_multiplicacao_logo_apos'] == true ? '*' : ultima_comeco_termo['tem_divisao_logo_apos'] == true ? '/' : '';
 
                             //Junta o termo com as constantes antes e depois dele
-                            let constantes_reestituida_termo = `${string_montada_termo_comeco} ${operacao_mat_ultima_constante_inicio_termo} ${termo_original_este_termo} ${string_montada_termo_final}`.trim();
-                            let constantes_reestituida_derivacao = `${string_montada_termo_comeco} ${operacao_mat_ultima_constante_inicio_termo} ${derivada_termo_atual} ${string_montada_termo_final}`.trim();
+                            //let constantes_reestituida_termo = `${string_montada_termo_comeco} ${operacao_mat_ultima_constante_inicio_termo} ${termo_original_este_termo} ${string_montada_termo_final}`.trim();
+                            //let constantes_reestituida_derivacao = `${string_montada_termo_comeco} ${operacao_mat_ultima_constante_inicio_termo} ${derivada_termo_atual} ${string_montada_termo_final}`.trim();
+                            let constantes_reestituida_derivacao = `${string_montada_termo_comeco} ${operacao_mat_ultima_constante_inicio_termo} {CONTEUDO_DERIVACAO} ${string_montada_termo_final}`.trim();
 
                             tabela_derivacoes_com_constantes_recolocadas[ id_derivacao_atual ] = {
                                 //Dados sobre o termo DONO dessa derivação cuja constantes foram restituidas
@@ -2474,8 +2476,9 @@ function derivar_expressao_por_etapas(expressao, emRelacao='x'){
                                     }
                                 },
 
-                                constantes_reestituida_termo     : constantes_reestituida_termo,
-                                constantes_reestituida_derivacao : constantes_reestituida_derivacao,
+                                constantes_reestituida_derivacao   : constantes_reestituida_derivacao,
+                                //constantes_reestituida_termo     : constantes_reestituida_termo,
+                                //constantes_reestituida_derivacao : constantes_reestituida_derivacao,
 
                                 //Dados extra das constantes usadas nesse output
                                 _constantes: {
@@ -2494,6 +2497,50 @@ function derivar_expressao_por_etapas(expressao, emRelacao='x'){
         }
 
         //TODO: substituir os IDs das derivações na expressão pelas derivadas que já calculamos
+
+        //TODO: localizar as derivadas dependentes de cada derivada feita
+        let tabela_derivacoes_depedentes = {
+            //ex deriv1: [deriv2, deriv<N>, etc...]
+        };
+
+        //Para cada derivada feita
+        for( let p = 0 ; p < lista_bruta_derivacoes_prontas.length ; p++ )
+        {
+            let info_derivacao_atual = lista_bruta_derivacoes_prontas[p];
+            let id_derivacao_p       = info_derivacao_atual['id'];
+            let derivacao_p          = info_derivacao_atual['derivacao'];
+            let termo_p              = info_derivacao_atual['original'];
+            let dependentes_p        = [];
+
+            //Para cada derivada feita(segundo laço alinhado), VAI PROCURAR SE ELÁ(isso é a <P1>) DENTRO DA DERIVADA <P> do laço externo
+            for( let p1 = 0 ; p1 < lista_bruta_derivacoes_prontas.length ; p1++ )
+            {
+                let info_derivacao_p1 = lista_bruta_derivacoes_prontas[p1];
+                let id_derivacao_p1   = info_derivacao_p1['id'];
+                let derivacao_p1      = info_derivacao_p1['derivacao'];
+                let termo_p1          = info_derivacao_p1['original'];
+
+                //Se foi encontrado exatamente a expressão(termo <termo_p1>), dentro da <derivacao_p>
+                if( derivacao_p.indexOf( termo_p1 ) != -1 && 
+                    termo_p1 != termo_p 
+                ){
+                    dependentes_p.push({
+                        id: id_derivacao_p1,
+                        termo: termo_p1,
+                        derivacao: info_derivacao_p1['derivacao'],
+
+                        //Dados extra
+                        _dados: {
+                            derivacao: info_derivacao_p1
+                        }
+                    });
+                }
+
+            }
+
+            //Controi a relação, de quais são as derivadas dependentes de cada derivada feita
+            tabela_derivacoes_depedentes[ id_derivacao_p ] = dependentes_p;
+        }
 
         debugger;
 
