@@ -2542,6 +2542,38 @@ function derivar_expressao_por_etapas(expressao, emRelacao='x'){
             tabela_derivacoes_depedentes[ id_derivacao_p ] = dependentes_p;
         }
 
+        //TODO: monta termos_substituidos_pelos_ids, PORÈM COM AS DERIVADAS SUBSTITUIDAS NOVAMENTE
+        let lista_termos_substituidos_pelos_ids_derivados = [];
+        for( let p = 0 ; p < termos_substituidos_pelos_ids.length ; p++ )
+        {
+            let termo_atual_vai_substituir   = termos_substituidos_pelos_ids[p];
+            let termo_derivacoes_p_juntadas  = String(termo_atual_vai_substituir);
+
+            //Se nao for uma constante
+            if( termo_atual_vai_substituir != 'constante' )
+            {
+                let derivacoes_divididas         = termo_atual_vai_substituir.split(' ');  //divide por palavras
+                
+                //Vai substituindo os IDs pelas suas respectivas derivações
+                for( let p1 = 0 ; p1 < derivacoes_divididas.length ; p1++ )
+                {   
+                    let id_p1 = derivacoes_divididas[p1];
+
+                    //Se não for uma operação matemática
+                    if( id_p1 != '*' && id_p1 != '/' ) 
+                    {
+                        let dados_derivacao_p1 = mapa_derivacoes_prontas[ id_p1 ] || {};
+                        let derivacao_p1       = dados_derivacao_p1['derivacao'];
+
+                        termo_derivacoes_p_juntadas = utils.substituirTudo(String(termo_derivacoes_p_juntadas), id_p1, derivacao_p1);
+                    }
+                }
+
+            }
+
+            lista_termos_substituidos_pelos_ids_derivados.push( termo_derivacoes_p_juntadas );
+        }
+
         debugger;
 
         //let termos = validacoes.get_derivacoes_identificadas( nivel_termos_identificados, emRelacao );
