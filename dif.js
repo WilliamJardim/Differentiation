@@ -2396,6 +2396,7 @@ function derivar_expressao_por_etapas(expressao, emRelacao='x'){
         //Cria uma relação da derivacao e a constantes que ela tem, uma string contendo isso acima
         let tabela_termos_substituidos_com_constantes = {};
         let tabela_derivacoes_com_constantes_recolocadas = {};
+        let lista_derivacoes_com_constantes_recolocadas = [];
 
         for( let p = 0 ; p < termos_substituidos_pelos_ids.length ; p++ )
         {
@@ -2413,9 +2414,9 @@ function derivar_expressao_por_etapas(expressao, emRelacao='x'){
                     //Se não for um operador matemático
                     if( id_derivacao_atual != '' && id_derivacao_atual != '*' && id_derivacao_atual != '/' )
                     {
-                        let dados_constantes_presentes_esta_derivacao = mapa_derivacoes_prontas[id_derivacao_atual];
-                        let termo_original_derivacao                  = dados_constantes_presentes_esta_derivacao['original'];
-                        let derivada_termo_atual                      = dados_constantes_presentes_esta_derivacao['derivacao'];
+                        let dados_constantes_presentes_esta_derivacao = mapa_derivacoes_prontas[id_derivacao_atual] || {};
+                        let termo_original_derivacao                  = dados_constantes_presentes_esta_derivacao['original'] || '';
+                        let derivada_termo_atual                      = dados_constantes_presentes_esta_derivacao['derivacao'] || '';
 
                         //Encontra as contantes do termo
                         let constantes_este_termo = null;
@@ -2460,7 +2461,7 @@ function derivar_expressao_por_etapas(expressao, emRelacao='x'){
                             //let constantes_reestituida_derivacao = `${string_montada_termo_comeco} ${operacao_mat_ultima_constante_inicio_termo} ${derivada_termo_atual} ${string_montada_termo_final}`.trim();
                             let constantes_reestituida_derivacao = `${string_montada_termo_comeco} ${operacao_mat_ultima_constante_inicio_termo} {CONTEUDO_DERIVACAO} ${string_montada_termo_final}`.trim();
 
-                            tabela_derivacoes_com_constantes_recolocadas[ id_derivacao_atual ] = {
+                            let dados = {
                                 //Dados sobre o termo DONO dessa derivação cuja constantes foram restituidas
                                 id_derivacao_pertencente             : id_derivacao_atual,
 
@@ -2488,6 +2489,10 @@ function derivar_expressao_por_etapas(expressao, emRelacao='x'){
                                     ultima_comeco_termo         : ultima_comeco_termo
                                 }
                             }
+
+                            tabela_derivacoes_com_constantes_recolocadas[ id_derivacao_atual ] = dados; 
+
+                            lista_derivacoes_com_constantes_recolocadas.push(dados);
                         }
 
                     }
@@ -2572,6 +2577,35 @@ function derivar_expressao_por_etapas(expressao, emRelacao='x'){
             }
 
             lista_termos_substituidos_pelos_ids_derivados.push( termo_derivacoes_p_juntadas );
+        }
+
+        //Monta uma lista para cada ID_DERIVACAO quais são a string montada com as derivadas depedentes
+        let tabela_id_derivacao_com_depedentes_e_derivacao_substituida = {};
+        for( let p = 0 ; p < termos_substituidos_pelos_ids.length ; p++ )
+        {
+            let termo_id_subtituido_atual_p       = termos_substituidos_pelos_ids[p];
+            let ids_divididos                     = termo_id_subtituido_atual_p.split(' ');
+            let termo_derivado_subtituido_atual_p = lista_termos_substituidos_pelos_ids_derivados[p];
+            let dependentes_derivada_p            = termo_id_subtituido_atual_p != 'constante' ? tabela_derivacoes_depedentes[ids_divididos[0] || null] : [];
+            
+            if(termo_id_subtituido_atual_p != 'constante')
+            {
+                tabela_id_derivacao_com_depedentes_e_derivacao_substituida[termo_id_subtituido_atual_p] = {
+                    dependentes     : dependentes_derivada_p,
+                    id              : termo_id_subtituido_atual_p,
+                    derivacao_toda  : termo_derivado_subtituido_atual_p
+                }
+            }
+        }
+
+        //Criar uma lista com as contantes e os IDs das derivações
+        for( let p = 0 ; p < lista_derivacoes_com_constantes_recolocadas.length ; p++ )
+        {
+            let dados_derivacao_atual = lista_derivacoes_com_constantes_recolocadas[p];
+            let string_template       = dados_derivacao_atual['constantes_reestituida_derivacao'];
+            let id_derivacao          = dados_derivacao_atual['id_derivacao_pertencente'];
+
+            let nova_string           = utils.substituirTudo( String(string_template), '{CONTEUDO_DERIVACAO}',  );
         }
 
         debugger;

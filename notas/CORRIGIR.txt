@@ -1,3 +1,27 @@
+Ultimo comando usado para TESTAR
+derivar_expressao_por_etapas('cons(z*k*o) + qq / tr * cos(sen(j+h*x) * lou(25) + e^sen(x) + sen(y*h) + cos(45) * z) * UmaGrandoa * rt * rt / zr + you(45) * kos(k) + cos(2z)*sen(y)*cos(zy) + ln(jk4+8 * cos(e^(56*x+cos(45j*x)+cos(45yu))))', 'x')
+
+ATÈ AGORA TESTEI SÒ COM REGRA DA CADEIA, vou terminar primeiro pra regra da cadeia,
+e depois testar casos com regra do produto e quociente, para corrigir os problemas abaixo
+
+
+
+(FALTA CORRIGIR) Ao colocar regra do produto com constantes, ele acha que é regra da cadeia
+Por exemplo ao rodar no console:
+derivar_expressao_por_etapas('kos(25)*cos(x)*sen(x) + cons(z*k*o) + qq / tr * cos(sen(j+h*x) * lou(25) + e^sen(x) + sen(y*h) + cos(45) * z) * UmaGrandoa * rt * rt / zr + you(45) * kos(k) + cos(2z)*sen(y)*cos(zy) + ln(jk4+8 * cos(e^(56*x+cos(45j*x)+cos(45yu))))', 'x')
+
+esse termo 'kos(25)*cos(x)*sen(x)' no começo é regra do produto, porém, ele identificou que é regra da cadeia, E ESTÀ ERRADO
+
+ele só consegue identificar regra do produto quando a regra do produto não tem constantes multiplicando
+
+(FALTA ANALISAR)
+preciso verificar se a variavel "tabela_derivacoes_depedentes" funcinou corretamente para a regra do produto
+e ajustar se necessario
+
+lembrando que na verdadem a "tabela_derivacoes_depedentes" das derivadas dependentes vai ser apenas para REGRA DA CADEIA, na regra do produto e quociente isso não se aplica
+
+
+
 (FALTA AJUSTAR) 
 Da linha 2394 até a linha 2493
 PRECISO CORRIGIR O RESULTADO DA FUNÇÂO, NO CASO DEVERIA SER CONSTANTES_INICIO * (DERIVADA_FORA * DERIVADA_DENTRO) * CONSTANTES_FINAL
