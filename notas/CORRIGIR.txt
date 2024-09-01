@@ -1,0 +1,446 @@
+(FALTA AJUSTAR) 
+Da linha 2394 até a linha 2493
+PRECISO CORRIGIR O RESULTADO DA FUNÇÂO, NO CASO DEVERIA SER CONSTANTES_INICIO * (DERIVADA_FORA * DERIVADA_DENTRO) * CONSTANTES_FINAL
+nao precisa incluir os parenteses de "(DERIVADA_FORA * DERIVADA_DENTRO)" porém, ele precisa colocar as constantes na ordem certa
+
+PRA ISSO POSSO USAR OUTRA ABORDAGEM
+nessa função que escrevi hj 31.08, eu posso colocar pra ele escrever assim: CONSTANTES_INICIO * [CONTEUDO_DERIVACAO] * CONTANTES_FINAL
+e ai PARA PODER COLOCAR O CONTEUDO_DERIVACAO, eu primeiro vou ter que encontrar as derivadas dependentes
+
+por exemplo, a derivação deriv1 possui 1 derivação depedente que é a deriv2
+ex:
+  derivacoes_dependentes = {
+    deriv1: ['deriv2'],
+    deriv3: ['deriv4']
+  }
+
+pois, a derivada de deriv1 é a regra da cadeia, que é a derivada de fora vezes a derivada de dentro, e no caso da deriv1, a derivada de dentro é justamente a deriv2
+e no caso da deriv3 o mesmo vale, usa a regra da cadeia, que é a derivada de fora vezes a derivada de dentro, e no caso da deriv3, a derivada de dentro é justamente a deriv4
+
+poderia ser regra do produto tambem, o mesmo se aplicaria,
+e poderia ter varias derivadas dependentes( NESSE CASO: a derivada do primeiro e a derivada do segundo)
+
+CAMINHOS PARA IDENTIFICAR AS DERIVADAS DEPENDENTES: 
+ ANALISAR AS EXPRESSÔES, PARA PROCURAR QUAL dos IDs deriv<NUM> é a parte de dentro da deriv1 por exemplo
+
+
+
+
+
+
+(FALTA RESOLVER) BUG: Ao tentar derivar algum termo e^x ou e^(alguma_coisa) como e^sen(x), ele dá erro na função identificar_termos_precisa_derivar 
+dif.js:476 Uncaught TypeError: Cannot read properties of null (reading 'forEach')
+    at Object.identificar_termos_precisa_derivar (dif.js:476:24)
+    at derivar_expressao_por_etapas (dif.js:2146:56)
+    at <anonymous>:1:1
+identificar_termos_precisa_derivar	@	dif.js:476
+derivar_expressao_por_etapas	@	dif.js:2146
+(anonymous)	@	VM522:1
+
+olhei meio por cima, e na função identificar_termos_precisa_derivar, a variavel "identificacoes" na linha 471 veio como null
+
+Ao rodar VEJA O ERRO NO CONSOLE
+derivar_expressao_por_etapas('cons(z*k*o) + qq / tr * cos(sen(j+h*x) + sen(y*h) + cos(45) * z) * UmaGrandoa * rt * rt / zr + e^sen(x) + you(45) * kos(k) + ln(jk4+8 * cos(e^(56*x+cos(45j*x)+cos(45yu))))', 'x')
+
+
+
+
+(RESOLVIDO ERA PROBLEMA NA ESCRITA DA TABELA) PROBLEMA NA DERIVAÇÂO DO ln(...)
+Ao usar
+derivar_expressao_por_etapas('cons(z*k*o) + qq / tr * cos(sen(j+h*x) + sen(y*h) + cos(45) * z) * UmaGrandoa * rt * rt / zr + kos(k) + ln(jk4+8 * cos(e^(56*x+cos(45j*x)+cos(45yu))))', 'x')
+
+ele identifica a derivada de ln(...) como sendo d{ ln(...) }, indicando que ELE NÂO ENCONTROU NA TABELA, ENTÂO SÒ IDENTIFICOU
+
+
+
+
+Ultima etapa concluida:
+[
+    {
+        "original": "cos(sen(j+h * x) + sen(y * h) + cos(45) * z)",
+        "derivacao": "-sen(sen(j+h * x) + sen(y * h) + cos(45) * z)",
+        "derivado": true,
+        "tem_tabela": true,
+        "isE_elevado": false
+    },
+    {
+        "original": "sen(j+h * x) + sen(y * h) + cos(45) * z",
+        "derivacao": "d{ sen(j+h * x) + sen(y * h) + cos(45) * z }",
+        "derivado": false,
+        "tem_tabela": false,
+        "isE_elevado": false
+    },
+    {
+        "original": "cos(jk4+8 * cos(e^(56 * x+cos(45j * x)+cos(45yu))))",
+        "derivacao": "-sen(jk4+8 * cos(e^(56 * x+cos(45j * x)+cos(45yu))))",
+        "derivado": true,
+        "tem_tabela": true,
+        "isE_elevado": false
+    },
+    {
+        "original": "jk4+8 * cos(e^(56 * x+cos(45j * x)+cos(45yu)))",
+        "derivacao": "d{ jk4+8 * cos(e^(56 * x+cos(45j * x)+cos(45yu))) }",
+        "derivado": false,
+        "tem_tabela": false,
+        "isE_elevado": false
+    }
+]
+
+ta tudo certo
+acredito que posso dar continuidade MAIS PRECISO TESTAR MAIS
+
+
+
+
+
+(RESOLVIDO) (FALTA RESOLVER A ANALISAR E TESTAR) PROBLEMAS MAIOR: 
+  identificar se uma função possui somas, multiplicações dentro do nivel atual, E SE ELA ESTÀ EMBALADA DENTRO DE UM PARANTESES MAIS EXTERNO
+pra poder 
+CORRIGIR A FUNÇÂO derivar_expressao_por_tabela, nas linhas 1295 a 1346, criar um novo ELSE para resolver o problema abaixo:
+ele precisa saber quando NAO VAI DAR PRA DERIVAR POR TABELA DIRETAMENTE
+
+Quando executa isso no console:
+derivar_expressao_por_etapas('cons(z*k*o) + qq / tr * cos(sen(j+h*x) + sen(y*h) + cos(45) * z) * UmaGrandoa * rt * rt / zr + kos(k) + cos(jk4+8 * cos(e^(56*x+cos(45j*x)+cos(45yu))))', 'x')
+
+2 CASOS:
+
+por exemplo, na ultima etapa programada
+o resultado foi:
+[
+    {
+        "original": "cos(sen(j+h * x) + sen(y * h) + cos(45) * z)",
+        "derivacao": "-sen(sen(j+h * x) + sen(y * h) + cos(45) * z)",
+        "derivado": true,
+        "tem_tabela": true,
+        "isE_elevado": false
+    },
+    {
+        "original": "sen(j+h * x) + sen(y * h) + cos(45) * z",
+        "derivacao": "cos(j+h * x) + sen(y * h) + cos(45) * z)",
+        "derivado": true,
+        "tem_tabela": true,
+        "isE_elevado": false
+    },
+    {
+        "original": "cos(jk4+8 * cos(e^(56 * x+cos(45j * x)+cos(45yu))))",
+        "derivacao": "-sen(jk4+8 * cos(e^(56 * x+cos(45j * x)+cos(45yu))))",
+        "derivado": true,
+        "tem_tabela": true,
+        "isE_elevado": false
+    },
+    {
+        "original": "jk4+8 * cos(e^(56 * x+cos(45j * x)+cos(45yu)))",
+        "derivacao": "d{ jk4+8 * cos(e^(56 * x+cos(45j * x)+cos(45yu))) }",
+        "derivado": false,
+        "tem_tabela": false,
+        "isE_elevado": false
+    }
+]
+
+o primeiro ele fez certo, 
+O SEGUNDO FEZ ERRADO
+o terceiro fez certo
+O QUARTO MAIS OU MENOS, MAIS VOU CONSIDERAR QUE FEZ CERTO
+
+para esse primeiro caso envolvendo função(.... expressoes + expressoes) eu consegui um código já
+(está no utils)
+
+tambem consegui um caso se envolver (...expressao_entre_parenteses.....)^alguma_coisa
+(ainda não está no utils MAIS ESTA NA PASTA RAIZ DESTE PROJETO)
+
+AGORA TEM OUTRO CASO:
+
+   1 - caso haja e^(...expressao_entre_parenteses.....)
+     caso seja E elevado a alguma expressão qualquer que seja
+
+   2 - TALVES NAO PRECISE: caso haja (...expressao_entre_parenteses.....)^e^alguma_coisa
+       talvez os códigos anteriores ja peguem isso
+
+   3 - TALVES NAO PRECISE: caso haja (...expressao_entre_parenteses.....)^alguma_coisa^e^tal_coisa
+       talvez os códigos anteriores ja peguem isso
+
+   4 - TALVES NAO PRECISE: caso haja alguma_coisa^(...expressao_entre_parenteses.....)
+     caso seja ALGUMA EXPRESSAO ESTEJA elevado a ALGUMA OUTRA EXPRESSÂO qualquer que seja
+ 
+   5 - TALVES NAO PRECISE: caso haja x^(...expressao_entre_parenteses.....)
+     caso seja X(ou algum numero tambem) elevado a ALGUMA OUTRA EXPRESSÂO qualquer que seja
+
+ todos esses casos seriam casos onde ele teria que identificar como NÂO ESTANDO ENVOLVINDO ENTRE PARENTESES E TEM QUE CAIR EM OUTRO ELSE IF NA HORA DE DERIVAR POR TABELA PRA NAO ERRAR
+
+
+
+
+(BUG FALTA RESOLVER) PROBLEMAS:
+na função derivar_expressao_por_etapas a partir da linha 1800 onde está o debugger
+na função derivar_expressao_por_tabela ocorre o seguinte problema abaixo:
+
+validacoes.consultarTabela("sen(j+h * x) + sen(y * h) + cos(45) * z")
+  retorna '{key: 'sen(<alguma_coisa>)', value: 'cos(<alguma_coisa>)'}'
+porém ESTA ERRADO, PORQUE ELE PEGOU A DERIVADA SÒ O COMEÇO NA TABELA
+
+e tambem tem casos como esse:
+validacoes.consultarTabela('jk4+8 * cos(e^(56*x+cos(45j*x)+cos(45yu)))');
+onde ele retornou null, pois não conseguiu identificar nada na tabela, NA VERDADE SERIA OUTRA FASE DA REGRA DA CADEIA
+QUE NÂO PODE SER RESOLVIDA NESSE NIVEL, TERIA QUE RESOLVER NO PROXIMO
+
+
+
+
+
+
+(RESOLVIDO) (BUG FALTA RESOLVER) 
+Ao rodar derivar_expressao_por_etapas('cons(z*k*o) + qq / tr * cos(sen(j+h*x) + sen(y*h) + cos(45) * z) * UmaGrandoa * rt * rt / zr + kos(k) + cos(jk4+8 * cos(e^(56x+cos(45jx)+cos(45yu))))', 'x')
+ no console
+
+no debugger
+na parte da variavel 'nivel_termos_identificados', dentro dela, 
+no atributo "identificados", ele retornou [
+    "nenhum{cos(sen(j+h*x) + sen(y*h) + cos(45) * z)}",
+    "d{cos(jk4+8 * cos(e^(56x+cos(45jx)+cos(45yu))))} * d{jk4+8 * cos(e^(56x+cos(45jx)+cos(45yu)))}"
+]
+
+e nas "regras" identificadas, ele retornou ["tabela", "regra_cadeia", "tabela", "regra_cadeia"]
+sendo que deveria ser duas regras da cadeia
+
+tambem outro pequeno detalhe, mais no atributo "emString" dele, ele retornou um simbolo de + isolado no final, mais esse ultimo detalhe é mais opcional é de menas prioridade
+
+
+
+
+
+(RESOLVIDO) (BUG)
+Ao rodar
+derivar_expressao_por_etapas('cons(z*k*o) + qq / tr * cos( sen(j+h*x) + sen(y*h) + cos(45) * z ) * UmaGrandoa * rt * rt / zr + kos(k) + cos(jk4+8 * cos(e^(56x+cos(45jx)+cos(45yu)))) * kon(45)', 'x')
+
+no debugger, na variavel 'nivel_termos_identificados', 
+o resultado foi :
+[
+    "constante{constante}",
+    "d{cos( sen(j+h * x) + sen(y * h) + cos(45) * z )} * d{sen(j+h * x) + sen(y * h) + cos(45) * z )}",
+    "constante{constante}",
+    "d{cos(jk4+8 * cos(e^(56x+cos(45jx)+cos(45yu))))} * d{jk4+8 * cos(e^(56x+cos(45jx)+cos(45yu)))}"
+]
+
+só o ultimo está certo. POIS O PRIMEIRO TERMO FICOU COM UM PROBLEMA: 
+O PROBLEMA È QUE O PRIMEIRO TERMO O "d{cos( sen(j+h * x) + sen(y * h) + cos(45) * z )} * d{sen(j+h * x) + sen(y * h) + cos(45) * z )}", está com um parenteses ")" a mais do que deveria depois do z
+
+FATOS:
+  sei que a constante "z" que está multiplicando não é quem causa o problema
+  tambem sei que o problema não é por causa do espaço entre os termos com pararenteses
+  
+  o problema ocorre na funcão "forma_identificar", por algum motivo
+
+
+
+
+
+(ANALISAR) Analisar melhor o debugger do ultimo teste, pra poder identificar se na variavel termosAtuais eu preciso remover os simbolos $(de constante somando/subtraindo que ficou zero) ou não
+
+(FALTA RESOLVER) BUG 24.08.2024
+Ao executar "derivar_expressao_por_tabela('52x^5')" no console
+retorna certo "5 * 52x^4"
+
+PORÈM, SE EU COLOCAR O 52x entre parenteses, ele buga tudo
+Ex:
+derivar_expressao_por_tabela('(52x)^5')
+retorna "cos(52x)^5)", isso tá completamente errado
+
+* POSSIVEL SOLUCAO: identificar se o parenteses (..expressao...) ele é a chamada de uma função como COS, SEN, 
+OU ENTÂO SE O parenteses (..expressao...) é apenas um parenteses normal pra dar enfase, e não é uma função
+CRIAR UM utils.isParentesesDeFuncao
+  que vai identificar do que se trata o pararenteses: se é função(...alguma coisa) ou não... ou se é apenas um pararenteses normal como falei
+
+
+
+
+
+
+
+
+
+
+(RESOLVIDO) BUG CONSTANTES REPETIDAS 24.08.2024
+ao executar no console:
+derivar_expressao_por_etapas('cons(z*k*o) + qq / tr * cos(sen(j+h) + sen(y*h) + cos(45) * z) * UmaGrandoa * rt * rt / zr + kos(k) + cos(jk4+8 * cos(e^(56x+cos(45jx)+cos(45yu))))', 'x')
+
+no debugger, na variavel 'constantes_se_manter', vi que ele pega todos os zeros, e identifica como constantes que devem ser mantidas
+mais na realidade, esses zeros estão todos sendo somados(e foram produzidos na etapa anterior que transformava constantes somandos/subtraidos em zeros)
+TALVES NA FUNÇÂO costantes_se_manter, ignorar se for um ZERO SENDO SOMADO IGUAL FICOU NA STRING(veja no debugger)
+
+TODO: TALVES NA LINHA 904 do arquivo eu preciso de alguma forma ignorar os zeros que estão sendo somados, PORÈM SEM AFETAR O CASO DE QUANDO TIVER ZERO MULTIPLICANDO, pois ai nesse caso, precisaria identificar sim
+o que quero é ignorar os zeros que a outra função gerou e repassou pra função costantes_se_manter, conforme explicado.
+TALVES POSSO CONSIDERAR USAR UM CARACTER ESPECIAL OU UM IDENTIFICADOR UNICO PARA UMA CONSTANTE SENDO SOMADA AO INVEZ DE ZERO NAQUELA FUNÇÂO "remover_constantes_que_zeram"
+assim, isso nao afetaria a função "costantes_se_manter", e eu poderia tratar depois, para transformar em zeros novamente quando eu precisar(talvez no output final)
+
+
+
+
+(RESOLVIDO) CLAREZA 24.08.2024
+melhorar o código que remove as constantes "remover_constantes_que_zeram" e sua chamada
+pois ele recebe a expressão inteira pra substituir, NO ENTANDO A FUNÇÂO "remover_constantes_que_zeram" foi feita para lidar com um array de termos 
+verificar se ela foi feita da forma correta, e se da pra deixar mais facil de entender, e melhorar os parametros de entrada e seu funcionamento
+
+
+
+
+(FALTA RESOLVER) Ao executar o comando
+
+derivar_expressao_por_etapas('cos(2*x) * sen(x*y) - sen( x^2 + cos(x * y) ) + cos(y*x) * sen(45*z)', 'x')
+
+ ao olhar a variavel 'termos_identificados'
+
+ ele retorna esse Array
+ [
+    "d{cos(2 * x) } * sen(x * y) + cos(2 * x) * d{ sen(x * y)}",
+    "d{sen( x^2 + cos(x * y) )} * d{x^2 + cos(x * y)}",
+    "d{cos(y * x) * sen(45 * z)} * d{y * x) * sen(45 * z}"
+ ]
+
+ porém, o ultimo termo está errado.
+ pois "cos(y*x) * sen(45*z)" essa parte tem uma função que vai ter regra da cadeia multiplicado por uma constante(NESSE CASO A FUNCAO sen(45 * z} é tudo constante em relacao a X )
+ e ai, o o software identificou como "d{cos(y * x) * sen(45 * z)} * d{y * x) * sen(45 * z}"
+ mais está errado.
+
+ pois, derveria ser 'd{cos(y * x)}' * 'd{y * x}' * 'sen(45 * z)'
+ pois NA MATEMATICA QUANDO UMA FUNÇÂO QUE TEM X MULTIPLICA UMA CONSTANTE, A CONSTANTE SE MANTEM
+
+OBSERVAÇÂO: nao apavore,
+o erro foi na parte recente do código "formas_identificar" usado na função 'derivar_expressao_por_etapas'
+a parte de identificar quais regras existem no nivel atual funciona muito bem, PELO MENOS ATÈ O MOMENTO
+agora o problema está na função "formas_identificar" apenas
+PRECISO MELHORAR ELA PARA LIDAR COM ESSE CASO CORRETAMENTE
+
+SUGESTÂO PARA RESOLVER
+
+Basicamente, independente de ser regra da cadeia, ou produto
+se logo em seguida tem uma constante sendo multiplicada ou dividindo, ELA PRECISA SER MANTER
+
+Basicamente, se após a função(no nivel atual) HOUVER algum termo(função, variavel) QUE NÂO CONTENHA A variavel emRelacao, é constante
+precisamos recortar ela, e DERVIAR/identificar os termos,  e depois adicionar a constante
+
+function extrairTermosConstantes(funcao, emRelacao) {
+    // Definir regex para identificar funções matemáticas e constantes que não dependem de 'emRelacao'
+    const regexGeral = /(\b\d+\b|[a-zA-Z]+\([^)]*\)|\b[a-zA-Z]+\b)/g;
+
+    // Inicializa um array para armazenar os termos constantes
+    let constantes = [];
+
+    // Encontrar todos os termos (números, variáveis, funções)
+    let termos = funcao.match(regexGeral);
+
+    // Iterar sobre cada termo encontrado
+    termos.forEach(termo => {
+        // Verificar se o termo contém a variável 'emRelacao' dentro dele
+        const regexVariavel = new RegExp(`\\b${emRelacao}\\b`);
+        
+        // Se o termo não contiver a variável 'emRelacao', ele é constante
+        if (!regexVariavel.test(termo)) {
+            constantes.push(termo);
+        }
+    });
+
+    return constantes;
+}
+
+// Exemplos de uso
+console.log(extrairTermosConstantes('78 * cos(y*x) * sen(45*z) / y * cos(25)', 'x'));
+// Output: ['78', 'sen(45*z)', 'y', 'cos(25)']
+
+console.log(extrairTermosConstantes('cos(y*x) * sen(45*z) / y * cos(25)', 'x'));
+// Output: ['sen(45*z)', 'y', 'cos(25)']
+
+console.log(extrairTermosConstantes('cos(y*x) * sen(45*z)', 'x'));
+// Output: ['sen(45*z)']
+
+console.log(extrairTermosConstantes('cos(y*x) * sen(45*z) / y * cos(25)', 'x'));
+// Output: ['sen(45*z)', 'y', 'cos(25)']
+
+console.log(extrairTermosConstantes('cos(y*x) / sen(45*z)', 'x'));
+// Output: ['sen(45*z)']
+
+console.log(extrairTermosConstantes('cos(y*x) / z', 'x'));
+// Output: ['z']
+
+PORÈM AINDA TEM UM PROBLEMA NISSO
+
+por exemplo x^j, ele identifica j como constante, o que não é verdade.
+Nesse caso x^j, o j não é constante
+Pois quando for a variavel emRelacao elevado a alguma coisa N, as variaveis e coisas dessa coisa N não são constantes, são argumentos. Portanto, x^j, o j não é constante, e não deve estar na lista
+Também, se fosse alguma expressão complexa que tenha a variavel emRelacao elevado a alguma coisa N, o mesmo se aplica, as coisas dessa coisa N não são constantes.  
+
+Tambem, no caso da expressão complexa que tenha a variavel emRelacao elevado a alguma coisa N, se dentro dessa expressão também tiver outras variaveis sendo multiplicadas ou somadas, não é constante, se tiver a variavel emRelacao nela. 
+
+ISSO NÂO FOI O SUFICIENTE E EU CONTINUEI TENTANDO
+
+tambem por exemplo e^j, ele identifica j como console, o que tambem não é verdade
+Nesse caso e^j, o j não é constante
+e se depois do e^ tivesse uma expressão complexa, ela não seria constante, seria argumentos.
+
+
+Corrija o código com base nos exemplos abaixo
+
+Input: extrairTermosConstantes('e^j*x', 'x')
+Output: []
+
+Input: console.log(extrairTermosConstantes('e^(j*x) * sen(x)', 'x'));
+Output: []
+
+Input: console.log(extrairTermosConstantes('e^(j*y) * sen(x)', 'x'));
+Output: ['e^(j*y)']
+
+Input: console.log(extrairTermosConstantes('e^(j*y) / cos(25*y) * sen(x)', 'x'));
+Output: ['e^(j*y)', 'cos(25*y)']
+
+Input: console.log(extrairTermosConstantes('e^(j*x) / cos(25*y) * sen(x)', 'x'));
+Output: ['cos(25*y)']
+
+Input: console.log(extrairTermosConstantes('(x*4+2)^(j*y) / cos(25*y) * sen(x)', 'x'));
+Output: ['cos(25*y)']
+
+Input: console.log(extrairTermosConstantes('(x^4)^(j*y) / cos(25*y) * sen(x)', 'x'));
+Output: ['cos(25*y)']
+
+Input: console.log(extrairTermosConstantes('e^j / cos(25*y) * sen(x)', 'x'));
+Output: ['e^j']
+
+Input: console.log(extrairTermosConstantes('e^x / cos(25*y) * sen(x)', 'x'));
+Output: []
+
+Input: console.log(extrairTermosConstantes('e^2*x / cos(25*y) * sen(x)', 'x'));
+Output: []
+
+Input: console.log(extrairTermosConstantes('e^2*j / cos(25*y) * sen(x)', 'x'));
+Output: ['e^2*j']
+
+ELE AINDA NAO CONSEGUIU
+
+
+TENTANDO RESOLVER DE OUTRA FORMA
+
+
+//TODO: função que vai extrair apenas AS CONSTANTES QUE ESTIVEREM SENDO MULTIPLICADAS OU DIVIDIDAS PELOS TERMOS(nao constantes)
+function costantes_se_manter(termos, sinais, regras, emRelacao){
+    let constantes = [];
+
+    //Para cada termo(separado)
+    for( let i = 0 ; i < termos.length ; i++ )
+    {
+        //Desmembra as informações uteis
+        let termo = termos[i];
+
+        //Omite os termos de niveis internos ao nivel atual, para facilitar a identificação de regra do produto e regra do quociente
+        let termo_niveis_internos_omitidos = validacoes.omitirNiveisAbaixoNivelAtual(termo);
+
+        //Identifica se tem constante MULTIPLICANDO OU DIVIDINDO no nivel atual
+        let temMultiplicao = termo_niveis_internos_omitidos.indexOf('*') != -1,
+            temDivisao     = termo_niveis_internos_omitidos.indexOf('/') != -1;
+        
+        let multiplicacoes_e_divisoes = []; 
+        let strAtual = '';
+        
+        //Criar uma lista com todas(os termos) das multiplicações e divisões
+        //TODO: BUG ELE CORTA OS TERMOS DO FINAL
+        //TODO: REESCREVER ESSE ALGORITMO PARA RESOLVER O BUG
+        //PARA ISSO, objetivo é 'e^(j45) * cos(y*x+5) / sen(j)' ficar ['e^(j45)', 'cos(y*x+5)', 'sen(j)'], conseguindo separar corretamente independende se for uma multiplicação ou divisão  
+        for(
+        [....]

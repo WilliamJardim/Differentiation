@@ -1,0 +1,10 @@
+./backups
+./dev
+./backups/*
+./dev/*
+backups
+dev
+backups/*
+dev/*
+dif - Copia.js
+"dif - Copia.js"

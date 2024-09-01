@@ -1,0 +1,13 @@
+** Recursos que já estão disponiveis até o momento **
+
+DERIVADA PARCIAL - ele identifica quem é constante e quem não é
+
+IDENTIFICAR REGRA DA CADEIA, PRODUTO E QUOCIENTE
+
+Derivação por tabela
+
+Constantes(algo que não tem o X) sendo somadas ou subtraidas na expressão ficam zero
+(mesmo que seja varias funções se multiplicando SE TUDO FOR CONSTANTE E NAO TIVER O X MULTIPLICANDO ELAS) ELAS FICAM ZERO
+
+Constantes se multiplicando se mantém
+
